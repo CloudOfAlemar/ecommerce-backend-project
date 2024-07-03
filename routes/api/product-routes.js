@@ -4,15 +4,39 @@ const { Product, Category, Tag, ProductTag } = require('../../models');
 // The `/api/products` endpoint
 
 // get all products
-router.get('/', (req, res) => {
-  // find all products
+router.get('/', async (req, res) => {
   // be sure to include its associated Category and Tag data
+  try {
+    // find all products
+    const products = await Product.findAll( {
+      include : [ 
+        { model : Category, as : "category" },
+        { model : Tag, through : ProductTag, as : "tags" }
+      ]
+    } );
+    if( !products ) return res.status( 404 ).json( { message : "Products Not Found" } );
+    res.status( 200 ).json( products );
+  } catch( error ) {
+    res.status( 500 ).json( error );
+  }
 });
 
 // get one product
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
+  try {
+    const product = await Product.findByPk( req.params.id, {
+      include : [
+        { model : Category, as : "category" },
+        { model : Tag, through : ProductTag, as : "tags" }
+      ]
+    } );
+    if( !product ) return res.status( 404 ).json( { message : "Product Not Found" } );
+    res.status( 200 ).json( product );
+  } catch( error ) {
+    res.status( 500 ).json( error );
+  }
 });
 
 // create new product
@@ -22,6 +46,7 @@ router.post('/', (req, res) => {
       product_name: "Basketball",
       price: 200.00,
       stock: 3,
+      categoryId : 4,
       tagIds: [1, 2, 3, 4]
     }
   */
